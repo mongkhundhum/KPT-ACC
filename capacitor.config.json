@@ -1,0 +1,6 @@
+{
+  "appId": "com.klongpinto.acc",
+  "appName": "ระบบบัญชีร้านกล่องปิ่นโต",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}

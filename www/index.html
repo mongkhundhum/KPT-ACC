@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full bg-slate-50/50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SmartAcc - ระบบบัญชีร้านกล่องปิ่นโต</title>
+    <!-- Favicon link configured with your shop logo -->
+    <link rel="icon" type="image/png" href="https://img2.pic.in.th/Klong-Pin-To-37.253-x-20.32-cm.png">
+    <!-- Tailwind CSS for Modern Responsive Design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Kanit -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Kanit', 'sans-serif'],
+                    },
+                    screens: {
+                        'xs': '375px',
+                        'ipad': '768px',
+                        'ipad-pro': '1024px'
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Advanced Dynamic Safe Area Setup for modern Mobile and iPad devices */
+        body {
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        /* Adjusting layout headers to completely prevent dynamic island/notch overlaps */
+        header {
+            padding-top: env(safe-area-inset-top);
+            min-height: calc(3.5rem + env(safe-area-inset-top));
+            height: auto !important;
+        }
+        
+        /* Pad Sidebar from overlapping iOS hardware statuses on iPads */
+        aside {
+            padding-top: env(safe-area-inset-top);
+        }
+
+        .safe-bottom-padding {
+            padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+        }
+        
+        /* Bottom navigation safe padding to avoid overlapping the home indicator */
+        nav.mobile-bottom-nav {
+            padding-bottom: env(safe-area-inset-bottom);
+            height: calc(4.25rem + env(safe-area-inset-bottom)) !important;
+        }
+
+        button, select, input {
+            min-height: 42px;
+        }
+        .hide-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .hide-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans text-slate-700 antialiased overflow-hidden select-none">
+
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none w-auto max-w-[90vw]"></div>
+
+    <!-- MAIN APPLICATION WORKSPACE -->
+    <div class="flex h-full w-full overflow-hidden flex-col md:flex-row">
+        
+        <!-- SIDEBAR NAVIGATION (DESKTOP & LARGE TABLETS) -->
+        <aside class="hidden md:flex bg-slate-900 text-slate-300 w-64 flex-shrink-0 flex-col justify-between z-30 border-r border-slate-800/80">
+            <div>
+                <!-- Header with Logo Integration -->
+                <div class="h-16 flex items-center px-5 bg-slate-950 border-b border-slate-800/60 gap-2.5">
+                    <img src="https://img2.pic.in.th/Klong-Pin-To-37.253-x-20.32-cm.png" alt="Logo" class="h-8 w-auto rounded object-contain">
+                    <span id="sidebar-shop-name" class="truncate font-semibold tracking-wide text-white text-sm">ร้านกล่องปิ่นโต</span>
+                </div>
+                <nav class="p-4 space-y-1.5">
+                    <button onclick="switchTab('home')" class="nav-tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white bg-indigo-600 transition-all shadow-md shadow-indigo-900/30" data-tab-id="home">
+                        <i class="fa-solid fa-house text-base w-5 text-center"></i> หน้าแรก
+                    </button>
+                    <button onclick="switchTab('ledger')" class="nav-tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-slate-100 transition-all" data-tab-id="ledger">
+                        <i class="fa-solid fa-list-check text-base w-5 text-center"></i> สมุดบัญชี รับ-จ่าย
+                    </button>
+                    <button onclick="switchTab('stock')" class="nav-tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-slate-100 transition-all" data-tab-id="stock">
+                        <i class="fa-solid fa-boxes-stacked text-base w-5 text-center"></i> เช็กคลังสินค้า
+                    </button>
+                </nav>
+            </div>
+            
+            <div class="p-4 border-t border-slate-800/80 bg-slate-950/40 space-y-3">
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-slate-400 font-medium">ฐานข้อมูลระบบ</span>
+                        <span id="sidebar-cloud-badge" class="text-amber-400 flex items-center gap-1.5 font-medium">
+                            <span class="w-2 h-2 bg-amber-400 rounded-full inline-block animate-pulse"></span> ออฟไลน์
+                        </span>
+                    </div>
+                    <button onclick="openCloudConfigModal()" class="w-full mt-1 bg-slate-800 hover:bg-indigo-600 hover:text-white text-slate-300 font-medium py-1.5 px-2 rounded-lg transition-all block text-center border border-slate-700 hover:border-indigo-500">
+                        <i class="fa-solid fa-cloud text-xs mr-1"></i> จัดการข้อมูลคลาวด์
+                    </button>
+                </div>
+                <div class="text-[11px] text-slate-500 text-center">
+                    <p>ระบบบัญชีใช้งานจริงปี 2026</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT CONTAINER -->
+        <div class="flex-1 flex flex-col overflow-hidden min-w-0 pb-16 md:pb-0">
+            
+            <!-- Dynamic Header with notch-aware safety padding -->
+            <header class="bg-white border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-6 z-20 flex-shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <img src="https://img2.pic.in.th/Klong-Pin-To-37.253-x-20.32-cm.png" alt="Logo" class="h-7 w-auto object-contain rounded md:hidden">
+                    <div class="w-2 h-2 bg-emerald-500 rounded-full shadow-sm shadow-emerald-400 hidden md:block"></div>
+                    <h1 id="header-page-title" class="text-base font-semibold text-slate-800 tracking-wide">หน้าหลักบัญชีร้าน</h1>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="cloud-sync-indicator" class="hidden text-xs font-medium px-3 py-1.5 rounded-full transition-all"></span>
+                    <button id="header-sync-btn" onclick="syncAllToCloud()" class="hidden text-xs font-medium text-emerald-700 hover:text-white hover:bg-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-arrows-rotate"></i> ซิงค์ด่วน
+                    </button>
+                    <button onclick="openResetConfirmationModal()" class="text-xs font-medium text-rose-600 hover:text-white hover:bg-rose-500 bg-rose-50 border border-rose-100 px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-trash-can"></i> ล้างข้อมูล
+                    </button>
+                    <div class="h-8 w-[1px] bg-slate-200 mx-1 hidden sm:block"></div>
+                    <span class="text-xs text-slate-400 font-medium bg-slate-100 px-2.5 py-1.5 rounded-lg hidden sm:inline-block" id="header-clock">18 ก.ค. 2026</span>
+                </div>
+            </header>
+
+            <!-- MAIN WORKSPACE SCROLL CONTAINER -->
+            <main class="flex-1 overflow-y-auto p-4 sm:p-5 ipad:p-6 bg-slate-50 safe-bottom-padding md:pb-6">
+
+                <!-- SCREEN: HOME -->
+                <div id="screen-home" class="screen-panel space-y-4 sm:space-y-6 animate-fade-in-up">
+                    
+                    <!-- Main Balance Summary Card (Clean version without redundant Google Sheets button/text) -->
+                    <div class="bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-950 p-6 sm:p-8 rounded-2xl shadow-xl text-white relative overflow-hidden border border-indigo-950">
+                        <div class="absolute right-0 bottom-0 translate-x-4 translate-y-4 text-white/5 text-9xl pointer-events-none">
+                            <i class="fa-solid fa-sack-dollar"></i>
+                        </div>
+                        <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 relative z-10">
+                            <div>
+                                <span class="text-xs text-indigo-200/80 font-medium tracking-wider uppercase flex items-center gap-1.5">
+                                    <span class="w-2 h-2 bg-emerald-400 rounded-full inline-block"></span> ยอดเงินในร้านรวมทุกช่องทาง
+                                </span>
+                                <h2 class="text-3xl sm:text-4xl font-bold mt-1.5 tracking-tight text-white" id="home-total-balance">฿0.00</h2>
+                            </div>
+                            <div class="flex flex-wrap sm:flex-nowrap gap-2">
+                                <button onclick="openEditAccountsModal()" class="w-full sm:w-auto bg-white/5 hover:bg-white/10 text-white text-xs font-medium px-5 py-3 rounded-xl border border-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-gears text-indigo-300 text-sm"></i> ตั้งค่า & ปรับยอดบัญชี
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-5 pt-4 border-t border-white/5 flex justify-between items-center text-xs text-indigo-200/60 font-light">
+                            <span>เงินสดหน้าร้าน + บัญชีธนาคารทั้งหมด</span>
+                            <span class="text-[11px] text-indigo-300 font-medium flex items-center gap-1">
+                                <i class="fa-solid fa-store text-[10px]"></i> ร้านกล่องปิ่นโต
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Account Balances Row -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="dashboard-accounts-grid">
+                        <!-- Accounts Cards Rendered Here Dynamically -->
+                    </div>
+
+                    <!-- Quick Record Shortcuts (Contains the Gov 60/40 Scheme integrated button) -->
+                    <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                        <p class="text-xs font-semibold text-slate-500 mb-3.5 flex items-center gap-2 uppercase tracking-wider">
+                            <i class="fa-solid fa-bolt text-amber-500"></i> บันทึกด่วนหน้าร้าน
+                        </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <button onclick="openTransactionModal('income')" class="bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white p-4 rounded-xl font-medium text-xs flex flex-col items-center justify-center gap-2 transition-all border border-emerald-200/60 hover:border-emerald-600 shadow-sm group">
+                                <i class="fa-solid fa-circle-plus text-xl text-emerald-600 group-hover:text-white transition-colors"></i>
+                                <span>+ บันทึกรายรับ</span>
+                            </button>
+                            <button onclick="openTransactionModal('expense')" class="bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white p-4 rounded-xl font-medium text-xs flex flex-col items-center justify-center gap-2 transition-all border border-rose-200/60 hover:border-rose-600 shadow-sm group">
+                                <i class="fa-solid fa-circle-minus text-xl text-rose-600 group-hover:text-white transition-colors"></i>
+                                <span>- บันทึกรายจ่าย</span>
+                            </button>
+                            <button onclick="openGovModal()" class="bg-violet-50 hover:bg-violet-600 text-violet-700 hover:text-white p-4 rounded-xl font-medium text-xs flex flex-col items-center justify-center gap-2 transition-all border border-violet-200/60 hover:border-violet-600 shadow-sm group">
+                                <i class="fa-solid fa-flag text-xl text-violet-600 group-hover:text-white transition-colors"></i>
+                                <span>🇹🇭 ไทยช่วยไทย (60/40)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick KPI Statistics -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                            <div class="space-y-0.5">
+                                <span class="text-xs text-slate-400 font-medium block">รายได้รวมสะสม</span>
+                                <h4 class="text-xl font-semibold text-emerald-600 tracking-tight" id="kpi-income">฿0.00</h4>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm shadow-sm"><i class="fa-solid fa-arrow-down"></i></div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                            <div class="space-y-0.5">
+                                <span class="text-xs text-slate-400 font-medium block">รายจ่ายรวมสะสม</span>
+                                <h4 class="text-xl font-semibold text-rose-500 tracking-tight" id="kpi-expense">฿0.00</h4>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center text-sm shadow-sm"><i class="fa-solid fa-arrow-up"></i></div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                            <div class="space-y-0.5">
+                                <span class="text-xs text-violet-600 font-medium block">ไทยช่วยไทยพลัสวันนี้</span>
+                                <h4 class="text-xl font-semibold text-violet-700 tracking-tight" id="kpi-today-gov">฿0.00</h4>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center text-sm shadow-sm"><i class="fa-solid fa-flag"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- Warnings & Recent Logs Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <!-- Critical Stock Alert Box -->
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                            <h3 class="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> แจ้งเตือนคลังสินค้าเหลือน้อย
+                            </h3>
+                            <div id="home-low-stock-box" class="space-y-2 max-h-[180px] overflow-y-auto pr-1 flex-1"></div>
+                        </div>
+                        <!-- Recent Activity Log -->
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-clock-rotate-left text-slate-400"></i> รายการล่าสุด 3 รายการ
+                                </h3>
+                                <button onclick="switchTab('ledger')" class="text-xs text-indigo-600 font-medium hover:text-indigo-700 transition-colors">ดูทั้งหมด</button>
+                            </div>
+                            <div id="home-recent-logs" class="space-y-2 flex-1 max-h-[180px] overflow-y-auto pr-1"></div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- SCREEN: LEDGER -->
+                <div id="screen-ledger" class="screen-panel space-y-4 hidden animate-fade-in-up">
+                    
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3 items-center justify-between">
+                        <div class="w-full sm:w-auto">
+                            <h2 class="text-base font-semibold text-slate-800">รายการประวัติการรับเงิน-จ่ายเงิน</h2>
+                            <p class="text-xs text-slate-400 mt-0.5">บันทึกรายรับรายจ่ายทั้งหมดของร้านค้าอย่างเป็นระบบ</p>
+                        </div>
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <input type="text" id="ledger-search-input" oninput="runLedgerFilter()" placeholder="🔎 ค้นหารายการ..." class="text-xs px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all flex-1 sm:w-48">
+                            <select id="ledger-filter-select" onchange="runLedgerFilter()" class="text-xs px-3 py-2 border border-slate-200 rounded-xl bg-white text-slate-600 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:outline-none">
+                                <option value="all">แสดงทั้งหมด</option>
+                                <option value="income">เฉพาะรายรับ</option>
+                                <option value="expense">เฉพาะรายจ่าย</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto w-full">
+                            <table class="w-full text-left text-xs border-collapse min-w-[600px]">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-500">
+                                        <th class="p-4 font-medium w-28">วันที่</th>
+                                        <th class="p-4 font-medium">รายละเอียดธุรกรรม</th>
+                                        <th class="p-4 font-medium text-center w-36">ช่องทางรับ/จ่าย</th>
+                                        <th class="p-4 font-medium text-right w-32">จำนวนเงิน</th>
+                                        <th class="p-4 font-medium text-center w-16">การกระทำ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-ledger-body" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- SCREEN: STOCK -->
+                <div id="screen-stock" class="screen-panel space-y-4 hidden animate-fade-in-up">
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                        
+                        <!-- Add Stock Form -->
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4 h-fit">
+                            <h3 class="text-sm font-semibold text-slate-800 border-b border-slate-100 pb-2.5 flex items-center gap-2">
+                                <i class="fa-solid fa-circle-plus text-indigo-500"></i> เพิ่มสินค้าใหม่ลงคลังสินค้า
+                            </h3>
+                            <form id="stock-add-form" onsubmit="submitStockForm(event)" class="space-y-3.5 text-xs">
+                                <div>
+                                    <label class="block font-medium text-slate-500 mb-1">ชื่อสินค้า</label>
+                                    <input type="text" id="add-p-name" placeholder="เช่น นมจืด, ขนมปังกรอบ" class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" required>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block font-medium text-slate-500 mb-1">ราคาต้นทุน (฿)</label>
+                                        <input type="number" step="0.01" id="add-p-cost" placeholder="0.00" class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" required>
+                                    </div>
+                                    <div>
+                                        <label class="block font-medium text-slate-500 mb-1">ราคาขายปลีก (฿)</label>
+                                        <input type="number" step="0.01" id="add-p-price" placeholder="0.00" class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" required>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block font-medium text-slate-500 mb-1">จำนวนคงเหลือ</label>
+                                        <input type="number" id="add-p-stock" placeholder="0" class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" required>
+                                    </div>
+                                    <div>
+                                        <label class="block font-medium text-slate-500 mb-1">เกณฑ์สต็อกต่ำ</label>
+                                        <input type="number" id="add-p-min" placeholder="5" class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition-all shadow-md shadow-indigo-600/10 text-xs mt-2 border border-indigo-600">
+                                    <i class="fa-solid fa-check mr-1"></i> บันทึกเพิ่มสินค้าเข้าคลัง
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Current Stock List -->
+                        <div class="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3 gap-2">
+                                <h3 class="text-sm font-semibold text-slate-800">รายการคลังสินค้า</h3>
+                                <div class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-3 py-1.5 rounded-xl font-medium shadow-sm" id="total-stock-cost-label">มูลค่ารวมคลัง: ฿0.00</div>
+                            </div>
+                            
+                            <div class="bg-slate-50 p-3 rounded-xl text-xs text-slate-500 flex items-center gap-2 border border-slate-200/60">
+                                <i class="fa-solid fa-lightbulb text-amber-500"></i>
+                                <span>คลิกที่ปุ่ม <span class="bg-amber-500 text-white px-1.5 py-0.5 rounded font-bold text-[10px]">+</span> หรือ <span class="bg-slate-300 text-slate-700 px-1.5 py-0.5 rounded font-bold text-[10px]">-</span> เพื่อปรับยอดจำนวนสต็อกด่วน</span>
+                            </div>
+
+                            <div class="overflow-x-auto w-full">
+                                <table class="w-full text-left text-xs border-collapse min-w-[500px]">
+                                    <thead>
+                                        <tr class="text-slate-400 border-b border-slate-200 sticky top-0 bg-white z-10 text-[11px] uppercase tracking-wider">
+                                            <th class="pb-3 font-medium">ชื่อสินค้า</th>
+                                            <th class="pb-3 font-medium text-right">ต้นทุน / ราคาขาย</th>
+                                            <th class="pb-3 font-medium text-center w-32">ปรับยอดสินค้า</th>
+                                            <th class="pb-3 font-medium text-center w-16">จัดการ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-stock-body" class="divide-y divide-slate-100"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </main>
+
+            <!-- NAVIGATION (MOBILE/TABLET BOTTOM NAV WITH SAFE AREA COMPATIBILITY) -->
+            <nav class="md:hidden bg-white border-t border-slate-200 fixed bottom-0 left-0 right-0 z-40 flex justify-around items-center px-1 shadow-lg glass-effect mobile-bottom-nav">
+                <button onclick="switchTab('home')" class="mobile-nav-btn flex flex-col items-center justify-center text-indigo-600 w-full h-full py-1" data-mobile-id="home">
+                    <i class="fa-solid fa-house text-lg"></i>
+                    <span class="text-[11px] mt-1 font-medium">หน้าแรก</span>
+                </button>
+                <button onclick="switchTab('ledger')" class="mobile-nav-btn flex flex-col items-center justify-center text-slate-400 w-full h-full py-1" data-mobile-id="ledger">
+                    <i class="fa-solid fa-list-check text-lg"></i>
+                    <span class="text-[11px] mt-1 font-medium">สมุดบัญชี</span>
+                </button>
+                <button onclick="switchTab('stock')" class="mobile-nav-btn flex flex-col items-center justify-center text-slate-400 w-full h-full py-1" data-mobile-id="stock">
+                    <i class="fa-solid fa-boxes-stacked text-lg"></i>
+                    <span class="text-[11px] mt-1 font-medium">คลังสินค้า</span>
+                </button>
+            </nav>
+
+        </div>
+    </div>
+
+    <!-- MODAL: ADD TRANSACTION -->
+    <div id="quick-tx-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-3 sm:p-4 hidden backdrop-blur-sm">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up m-2 border border-slate-200">
+            <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50" id="modal-title-bar">
+                <h3 class="font-semibold text-sm" id="modal-title">ลงบันทึกรายวันด่วน</h3>
+                <button onclick="closeTransactionModal()" class="text-slate-400 hover:text-slate-600 text-lg p-1 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="modal-tx-form" onsubmit="submitModalTransaction(event)" class="p-5 space-y-4 text-xs">
+                <input type="hidden" id="modal-tx-type" value="income">
+                <div>
+                    <label class="block font-medium text-slate-500 mb-1">รายละเอียดธุรกรรม / ชื่อรายการ</label>
+                    <input type="text" id="modal-tx-desc" placeholder="เช่น ขายอาหารจานด่วน, ซื้อวัตถุดิบเข้าร้าน" class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-700 font-medium" required>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-medium text-slate-500 mb-1">จำนวนเงิน (บาท)</label>
+                        <input type="number" step="0.01" min="1" id="modal-tx-amount" placeholder="0.00" class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 font-semibold" required>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-500 mb-1">ช่องทางที่ชำระเงิน</label>
+                        <select id="modal-tx-acc" class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                            <!-- Options load dynamically -->
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" id="modal-submit-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-xl transition-all shadow-md text-xs mt-2 border border-indigo-600">
+                    บันทึกข้อมูลเข้าบัญชี
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: GOVERNMENT SCHEME CALCULATOR -->
+    <div id="gov-scheme-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-3 sm:p-4 hidden backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up m-2 border border-slate-200">
+            <div class="p-4 border-b border-violet-100 flex items-center justify-between bg-violet-50 text-violet-800 rounded-t-2xl font-semibold">
+                <h3 class="font-semibold text-sm">🇹🇭 ผู้ช่วยแยกบัญชี "ไทยช่วยไทยพลัส"</h3>
+                <button onclick="closeGovModal()" class="text-slate-400 hover:text-slate-600 text-lg p-1 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 space-y-4 text-xs">
+                <div>
+                    <label class="block font-medium text-slate-500 mb-1.5">ยอดขายสินค้ารวมของสิทธิ์ (บาท)</label>
+                    <input type="number" id="gov-sales-total" value="0" oninput="runGovCalculator()" class="w-full px-3 py-2.5 border-2 border-indigo-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-base font-semibold text-slate-800">
+                </div>
+                <div class="bg-slate-50 border border-slate-200/80 p-4 rounded-xl space-y-3">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-600 font-medium">🟢 เงินโอนเข้าจริงหน้าร้าน (40%):</span>
+                        <span class="text-emerald-600 font-semibold text-base" id="gov-calc-citizen">฿0.00</span>
+                    </div>
+                    <div class="h-[1px] bg-slate-200"></div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-600 font-medium">🔵 ยอดรอโอนสมทบจากรัฐบาล (60%):</span>
+                        <span class="text-indigo-600 font-semibold text-base" id="gov-calc-state">฿0.00</span>
+                    </div>
+                </div>
+                
+                <div class="bg-slate-50 p-3 rounded-xl text-[11px] text-slate-500 space-y-1.5 border border-slate-200/60 leading-relaxed">
+                    <p>• <strong>สัดส่วน 40%</strong> จะถูกโอนเข้าบัญชีธนาคารกรุงไทยของร้านทันที</p>
+                    <p>• <strong>สัดส่วนสมทบ 60%</strong> จะบันทึกค้างเบิก เพื่อใช้อ้างอิงตรวจสอบเงินเข้าจากรัฐย้อนหลัง</p>
+                </div>
+
+                <button onclick="saveGov6040Transaction()" class="w-full py-3 bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-xl transition-all shadow-md shadow-violet-600/10 text-xs border border-violet-600">
+                    <i class="fa-solid fa-floppy-disk mr-1"></i> ยืนยันบันทึกแยกยอดและสิทธิ์วันนี้
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EDIT ACCOUNTS -->
+    <div id="edit-accounts-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-3 sm:p-4 hidden backdrop-blur-sm">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col m-2 border border-slate-200">
+            <div class="p-5 bg-indigo-50/60 border-b border-indigo-100 flex items-center justify-between">
+                <div>
+                    <h3 class="font-semibold text-sm text-indigo-900 flex items-center gap-1.5">⚙️ ตั้งค่าบัญชีและปรับยอดเงิน</h3>
+                    <p class="text-xs text-indigo-600/80 mt-0.5">แก้ไขข้อมูลกระเป๋าเงิน ลบ หรือเพิ่มสถาบันการเงินของร้านได้ตามอิสระ</p>
+                </div>
+                <button onclick="closeEditAccountsModal()" class="text-slate-400 hover:text-slate-600 text-lg p-1 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="p-5 overflow-y-auto space-y-4 flex-1 text-xs hide-scroll">
+                <!-- Add New Account Button -->
+                <div class="flex justify-end">
+                    <button onclick="addNewBlankAccount()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-xl text-xs transition-colors shadow-sm flex items-center gap-1.5 border border-emerald-600">
+                        <i class="fa-solid fa-plus text-[10px]"></i> เพิ่มบัญชีธนาคารใหม่
+                    </button>
+                </div>
+                
+                <div id="edit-accounts-form-container" class="space-y-4">
+                    <!-- Editable form items generated dynamically -->
+                </div>
+            </div>
+
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex gap-2">
+                <button onclick="saveAllAccountSettings()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-xl transition-all shadow-md text-xs border border-indigo-600">
+                    <i class="fa-solid fa-floppy-disk mr-1"></i> บันทึกการเปลี่ยนแปลง
+                </button>
+                <button onclick="closeEditAccountsModal()" class="px-5 bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 font-medium py-3 rounded-xl transition-all text-xs">
+                    ยกเลิก
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: GOOGLE SHEETS CLOUD SETTINGS -->
+    <div id="cloud-config-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-3 sm:p-4 hidden backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up m-2 border border-slate-200">
+            <div class="p-4 bg-slate-900 text-white border-b border-slate-800 flex items-center justify-between">
+                <div>
+                    <h3 class="font-semibold text-sm flex items-center gap-2">☁️ เชื่อมต่อ Google Sheet (Cloud Free)</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">บันทึกข้อมูลและซิงค์ข้อมูลของร้านขึ้นระบบคลาวด์</p>
+                </div>
+                <button onclick="closeCloudConfigModal()" class="text-slate-400 hover:text-white text-lg p-1 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 space-y-4 text-xs">
+                <div>
+                    <label class="block font-medium text-slate-600 mb-1.5">ลิงก์ Google Apps Script Web App (URL):</label>
+                    <input type="text" id="cloud-gas-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                    <p class="text-[11px] text-slate-400 mt-1.5">วางลิงก์ Web App จาก Google Sheets ที่ท่านติดตั้งเรียบร้อยแล้วเพื่อใช้จัดการซิงค์ข้อมูล</p>
+                </div>
+
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                    <div class="flex items-center justify-between text-xs font-medium">
+                        <span class="text-slate-500">สถานะการเชื่อมต่อในปัจจุบัน:</span>
+                        <span id="modal-cloud-status" class="text-slate-400">ยังไม่ระบุลิงก์</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button onclick="testCloudConnection()" class="bg-white hover:bg-slate-50 text-slate-700 font-medium py-2.5 rounded-xl text-xs transition-colors border border-slate-300">
+                        <i class="fa-solid fa-plug text-slate-400 mr-1"></i> ทดสอบเชื่อมต่อ
+                    </button>
+                    <button onclick="saveCloudUrlSetting()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl text-xs transition-all border border-indigo-600 shadow-sm">
+                        บันทึกที่อยู่คลาวด์
+                    </button>
+                </div>
+
+                <div class="pt-4 border-t border-slate-200 flex flex-col gap-2">
+                    <p class="font-semibold text-slate-700 text-xs mb-1">การจัดการซิงค์ข้อมูลด้วยตนเอง (สองทาง):</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="pullDataFromCloud()" class="bg-emerald-50 hover:bg-emerald-600 text-emerald-800 hover:text-white font-medium py-3 rounded-xl text-xs transition-all border border-emerald-200/60 hover:border-emerald-600 flex flex-col items-center justify-center gap-1 shadow-sm group">
+                            <i class="fa-solid fa-cloud-arrow-down text-lg text-emerald-600 group-hover:text-white transition-colors"></i>
+                            <span>ดึงจาก Google Sheet</span>
+                        </button>
+                        <button onclick="pushDataToCloud()" class="bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white font-medium py-3 rounded-xl text-xs transition-all border border-amber-200/60 hover:border-amber-600 flex flex-col items-center justify-center gap-1 shadow-sm group">
+                            <i class="fa-solid fa-cloud-arrow-up text-lg text-amber-600 group-hover:text-white transition-colors"></i>
+                            <span>บันทึกไป Google Sheet</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CONFIRM SYSTEM RESET -->
+    <div id="reset-confirm-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4 text-center m-2 border border-slate-200 animate-fade-in-up">
+            <div class="w-12 h-12 bg-rose-50 text-rose-600 border border-rose-100 rounded-full flex items-center justify-center text-xl mx-auto shadow-sm">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="space-y-1">
+                <h3 class="font-semibold text-sm text-slate-800">ยืนยันการล้างข้อมูลระบบ?</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">ยอดเงินสะสม ประวัติสมุดบัญชี และข้อมูลคลังสินค้าทั้งหมดจะถูกลบและรีเซ็ตกลับเป็นศูนย์เพื่อเริ่มต้นบัญชีใหม่</p>
+            </div>
+            <div class="flex gap-2 text-xs pt-1">
+                <button onclick="resetSystemDataConfirmed()" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-medium py-2.5 rounded-xl border border-rose-600 shadow-sm transition-colors">
+                    ใช่, ล้างข้อมูลทั้งหมด
+                </button>
+                <button onclick="closeResetConfirmationModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 rounded-xl border border-slate-200 transition-colors">
+                    ยกเลิก
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP ENGINE SCRIPTS -->
+    <script>
+        const BANK_CATALOGUE = [
+            { code: "CASH", name: "เงินสดหน้าร้าน", colorClass: "bg-amber-500", textClass: "text-amber-600", bgLight: "bg-amber-50", icon: "fa-wallet" },
+            { code: "KBANK", name: "ธนาคารกสิกรไทย", colorClass: "bg-emerald-600", textClass: "text-emerald-600", bgLight: "bg-emerald-50", icon: "fa-building-columns" },
+            { code: "KTB", name: "ธนาคารกรุงไทย", colorClass: "bg-sky-500", textClass: "text-sky-500", bgLight: "bg-sky-50", icon: "fa-building-columns" },
+            { code: "SCB", name: "ธนาคารไทยพาณิชย์", colorClass: "bg-purple-600", textClass: "text-purple-600", bgLight: "bg-purple-50", icon: "fa-building-columns" },
+            { code: "BBL", name: "ธนาคารกรุงเทพ", colorClass: "bg-blue-800", textClass: "text-blue-800", bgLight: "bg-blue-50", icon: "fa-building-columns" },
+            { code: "BAY", name: "ธนาคารกรุงศรีอยุธยา", colorClass: "bg-yellow-500", textClass: "text-yellow-600", bgLight: "bg-yellow-50", icon: "fa-building-columns" },
+            { code: "TTB", name: "ธนาคารทหารไทยธนชาต", colorClass: "bg-orange-500", textClass: "text-orange-600", bgLight: "bg-orange-50", icon: "fa-building-columns" }
+        ];
+
+        // Helper function to safely parse dates from local storage or cloud
+        function parseDateSafely(dateInput) {
+            if (!dateInput) return null;
+            if (dateInput instanceof Date) return dateInput;
+            
+            // Handle standard YYYY-MM-DD
+            if (typeof dateInput === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+                const [y, m, d] = dateInput.split('-').map(Number);
+                return new Date(y, m - 1, d);
+            }
+            
+            const parsed = new Date(dateInput);
+            if (!isNaN(parsed.getTime())) return parsed;
+            return null;
+        }
+
+        // Format date to: "18 กรกฎาคม 2569 เวลา 14:30 น."
+        function formatThaiDateWithTime(dateInput) {
+            if (!dateInput) return '-';
+            const date = parseDateSafely(dateInput);
+            if (!date) return dateInput;
+
+            const months = [
+                "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+                "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+            ];
+            const day = date.getDate();
+            const month = months[date.getMonth()];
+            const year = date.getFullYear() + 543;
+
+            // Check if input date includes time data (e.g. ISO string or Raw Datetime string)
+            const hasTime = typeof dateInput === 'string' && (dateInput.includes(':') || dateInput.includes('T') || dateInput.includes('GMT'));
+            
+            if (hasTime) {
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                return `${day} ${month} ${year} เวลา ${hours}:${minutes} น.`;
+            } else {
+                return `${day} ${month} ${year}`;
+            }
+        }
+
+        // Production DB setup initialized to 0 with precise configuration requested
+        const initialAccounts = [
+            { id: "acc1", bankCode: "CASH", name: "เงินสดหน้าร้าน", accountNo: "ลิ้นชักรับเงินสด", balance: 0.00 },
+            { id: "acc2", bankCode: "KBANK", name: "Make By KBank", accountNo: "129-8-33988-5", balance: 0.00 },
+            { id: "acc3", bankCode: "KTB", name: "ร้านกล่องปิ่นโต", accountNo: "666-0-52428-2", balance: 0.00 }
+        ];
+
+        const initialLedger = [];
+        const initialInventory = [];
+
+        // Application states loading with embedded default Google Apps Script Web App URL
+        let accounts = JSON.parse(localStorage.getItem('real_accounts_p2026')) || initialAccounts;
+        let ledger = JSON.parse(localStorage.getItem('real_ledger_p2026')) || initialLedger;
+        let inventory = JSON.parse(localStorage.getItem('real_inventory_p2026')) || initialInventory;
+        let cloudGasUrl = localStorage.getItem('cloud_gas_url_p2026') || 'https://script.google.com/macros/s/AKfycbxW62wrOaxK2bAyEs-Ik3YqJlERLVWFZhaPmWg0qFQDawMaOhB8sfIqVSQ1u9zTfa_IvQ/exec';
+
+        // Temporary storage for modifying accounts inside edit modal
+        let tempAccountsEditList = [];
+
+        function saveAppState() {
+            localStorage.setItem('real_accounts_p2026', JSON.stringify(accounts));
+            localStorage.setItem('real_ledger_p2026', JSON.stringify(ledger));
+            localStorage.setItem('real_inventory_p2026', JSON.stringify(inventory));
+            
+            // Auto sync to cloud in background whenever changes are registered
+            if (cloudGasUrl) {
+                autoPushToCloud();
+            }
+        }
+
+        async function autoPushToCloud() {
+            const indicator = document.getElementById('cloud-sync-indicator');
+            if (!cloudGasUrl) return;
+
+            if (indicator) {
+                indicator.className = "text-[11px] font-medium px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5";
+                indicator.innerHTML = `<svg class="animate-spin h-3 w-3 text-amber-600 inline-block" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> กำลังอัปเดตคลาวด์...`;
+                indicator.classList.remove('hidden');
+            }
+
+            try {
+                const payload = {
+                    accounts: accounts,
+                    ledger: ledger,
+                    inventory: inventory
+                };
+
+                const response = await fetch(cloudGasUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    const res = await response.json();
+                    if (res.status === "success") {
+                        if (indicator) {
+                            indicator.className = "text-[11px] font-medium px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5";
+                            indicator.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-emerald-600"></i> บันทึกบนคลาวด์แล้ว`;
+                            setTimeout(() => {
+                                indicator.classList.add('hidden');
+                            }, 3000);
+                        }
+                    } else {
+                        throw new Error(res.message);
+                    }
+                } else {
+                    throw new Error("HTTP connection failed");
+                }
+            } catch (error) {
+                console.error("Auto Sync Background Error:", error);
+                if (indicator) {
+                    indicator.className = "text-[11px] font-medium px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1.5";
+                    indicator.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> เซฟในเครื่องชั่วคราว`;
+                }
+            }
+        }
+
+        function showNotification(msg, isSuccess = true) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl border text-xs font-medium transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto bg-white min-w-[260px] ${
+                isSuccess ? 'border-emerald-100 text-emerald-800 bg-emerald-50' : 'border-rose-100 text-rose-800 bg-rose-50'
+            }`;
+            toast.innerHTML = `
+                <i class="fa-solid ${isSuccess ? 'fa-circle-check text-emerald-500' : 'fa-triangle-exclamation text-rose-500'} text-base"></i>
+                <div class="flex-1">${msg}</div>
+            `;
+            container.appendChild(toast);
+            
+            setTimeout(() => { toast.classList.remove('opacity-0', 'translate-y-2'); }, 10);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function openCloudConfigModal() {
+            document.getElementById('cloud-gas-url').value = cloudGasUrl;
+            updateCloudModalStatus();
+            document.getElementById('cloud-config-modal').classList.remove('hidden');
+        }
+
+        function closeCloudConfigModal() {
+            document.getElementById('cloud-config-modal').classList.add('hidden');
+        }
+
+        function updateCloudModalStatus() {
+            const statusEl = document.getElementById('modal-cloud-status');
+            if (cloudGasUrl) {
+                statusEl.className = "text-emerald-600 font-medium flex items-center gap-1.5";
+                statusEl.innerHTML = `<i class="fa-solid fa-cloud-arrow-up animate-pulse"></i> เชื่อมโยงสเปรดชีตแล้ว`;
+            } else {
+                statusEl.className = "text-slate-400 font-medium";
+                statusEl.innerText = "ยังไม่ได้เชื่อมต่อ (ออฟไลน์)";
+            }
+            updateHeaderCloudStatus();
+        }
+
+        function updateHeaderCloudStatus() {
+            const sidebarBadge = document.getElementById('sidebar-cloud-badge');
+            const headerSyncBtn = document.getElementById('header-sync-btn');
+
+            if (cloudGasUrl) {
+                if (sidebarBadge) {
+                    sidebarBadge.className = "text-emerald-400 flex items-center gap-1.5 font-medium";
+                    sidebarBadge.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-400 rounded-full inline-block"></span> เชื่อมคลาวด์แล้ว`;
+                }
+                if (headerSyncBtn) headerSyncBtn.classList.remove('hidden');
+            } else {
+                if (sidebarBadge) {
+                    sidebarBadge.className = "text-amber-400 flex items-center gap-1.5 font-medium";
+                    sidebarBadge.innerHTML = `<span class="w-1.5 h-1.5 bg-amber-400 rounded-full inline-block animate-ping"></span> ออฟไลน์`;
+                }
+                if (headerSyncBtn) headerSyncBtn.classList.add('hidden');
+            }
+        }
+
+        function saveCloudUrlSetting() {
+            const urlInput = document.getElementById('cloud-gas-url').value.trim();
+            cloudGasUrl = urlInput;
+            localStorage.setItem('cloud_gas_url_p2026', cloudGasUrl);
+            updateCloudModalStatus();
+            showNotification("บันทึกที่อยู่คลาวด์ Google Sheet แล้ว!");
+        }
+
+        async function testCloudConnection() {
+            const url = document.getElementById('cloud-gas-url').value.trim();
+            if (!url) {
+                showNotification("กรุณาระบุที่อยู่ Web App ของ Apps Script ก่อนทดสอบ", false);
+                return;
+            }
+
+            showNotification("กำลังตรวจสอบสิทธิ์เชื่อมต่อกับสเปรดชีต...");
+            try {
+                const response = await fetch(url, { method: 'GET', mode: 'cors' });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.accounts) {
+                        showNotification("เชื่อมต่อระบบคลาวด์ Google Sheets สำเร็จแล้ว!");
+                    } else {
+                        showNotification("เชื่อมต่อสำเร็จ แต่โครงสร้างชีตไม่ถูกต้อง", false);
+                    }
+                } else {
+                    showNotification("การตอบสนองผิดพลาด โปรดตรวจสอบการตั้งค่าสิทธิ์ Web App", false);
+                }
+            } catch (error) {
+                console.error("Cloud Test Connection Error:", error);
+                showNotification("เชื่อมต่อล้มเหลว ตรวจสอบ URL หรือตั้งค่าแชร์เป็น Anyone", false);
+            }
+        }
+
+        async function pushDataToCloud() {
+            if (!cloudGasUrl) {
+                showNotification("กรุณากำหนดลิงก์เชื่อมต่อระบบคลาวด์ก่อน", false);
+                return;
+            }
+
+            showNotification("กำลังบันทึกข้อมูลอัปขึ้นคลาวด์...");
+            try {
+                const payload = { accounts, ledger, inventory };
+                const response = await fetch(cloudGasUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    const res = await response.json();
+                    if (res.status === "success") {
+                        showNotification("อัปโหลดและอัปเดตข้อมูลขึ้น Google Sheet สำเร็จ!");
+                    } else {
+                        showNotification("เกิดข้อผิดพลาดจากเซิร์ฟเวอร์: " + res.message, false);
+                    }
+                } else {
+                    showNotification("เชื่อมต่อคลาวด์ล้มเหลว ตรวจสอบสิทธิ์ Web App", false);
+                }
+            } catch (error) {
+                console.error("Cloud Push Error:", error);
+                showNotification("ไม่สามารถบันทึกข้อมูลขึ้นคลาวด์ได้ในขณะนี้", false);
+            }
+        }
+
+        async function pullDataFromCloud() {
+            if (!cloudGasUrl) {
+                showNotification("กรุณากำหนดลิงก์เชื่อมต่อระบบคลาวด์ก่อน", false);
+                refreshAppUI();
+                return;
+            }
+
+            showNotification("กำลังดาวน์โหลดข้อมูลชุดล่าสุดจากสเปรดชีต...");
+            try {
+                const response = await fetch(cloudGasUrl, { method: 'GET', mode: 'cors' });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.accounts && data.ledger && data.inventory) {
+                        accounts = data.accounts;
+                        ledger = data.ledger;
+                        inventory = data.inventory;
+                        saveAppState();
+                        showNotification("ดาวน์โหลดและซิงค์ฐานข้อมูลจาก Google Sheet สำเร็จแล้ว!");
+                    } else {
+                        showNotification("ข้อมูลบนสเปรดชีตไม่ถูกต้อง ใช้ข้อมูลเดิมในเครื่อง", false);
+                    }
+                } else {
+                    showNotification("เชื่อมต่อคลาวด์ไม่ได้ ดึงข้อมูลล่าสุดในเครื่องมาใช้", false);
+                }
+            } catch (error) {
+                console.error("Cloud Pull Error:", error);
+                showNotification("ระบบสลับใช้งานโหมดออฟไลน์ (Local Database)", false);
+            } finally {
+                refreshAppUI();
+            }
+        }
+
+        function syncAllToCloud() {
+            pushDataToCloud();
+        }
+
+        function openResetConfirmationModal() {
+            document.getElementById('reset-confirm-modal').classList.remove('hidden');
+        }
+
+        function closeResetConfirmationModal() {
+            document.getElementById('reset-confirm-modal').classList.add('hidden');
+        }
+
+        function resetSystemDataConfirmed() {
+            localStorage.clear();
+            accounts = JSON.parse(JSON.stringify(initialAccounts));
+            ledger = JSON.parse(JSON.stringify(initialLedger));
+            inventory = JSON.parse(JSON.stringify(initialInventory));
+            saveAppState();
+            closeResetConfirmationModal();
+            showNotification("ล้างประวัติธุรกรรมและคลังสินค้าทั้งหมดเรียบร้อยแล้ว!");
+            refreshAppUI();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.screen-panel').forEach(p => p.classList.add('hidden'));
+            
+            const activeScreen = document.getElementById(`screen-${tabId}`);
+            if (activeScreen) activeScreen.classList.remove('hidden');
+
+            const pageHeaders = {
+                'home': 'หน้าหลักบัญชีร้าน',
+                'ledger': 'สมุดบัญชี รับ-จ่าย',
+                'stock': 'เช็กคลังสินค้า'
+            };
+            document.getElementById('header-page-title').innerText = pageHeaders[tabId] || 'ระบบบัญชีร้านค้า';
+
+            document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md', 'shadow-indigo-900/30');
+                btn.classList.add('text-slate-400');
+                if (btn.getAttribute('data-tab-id') === tabId) {
+                    btn.classList.add('bg-indigo-600', 'text-white', 'shadow-md', 'shadow-indigo-900/30');
+                    btn.classList.remove('text-slate-400');
+                }
+            });
+
+            document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+                btn.classList.remove('text-indigo-600');
+                btn.classList.add('text-slate-400');
+                if (btn.getAttribute('data-mobile-id') === tabId) {
+                    btn.classList.add('text-indigo-600');
+                    btn.classList.remove('text-slate-400');
+                }
+            });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            refreshAppUI();
+        }
+
+        function renderDashboardAccounts() {
+            const grid = document.getElementById('dashboard-accounts-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            accounts.forEach(acc => {
+                const spec = BANK_CATALOGUE.find(b => b.code === acc.bankCode) || BANK_CATALOGUE[0];
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3.5 relative overflow-hidden group hover:border-slate-300 transition-all";
+                card.innerHTML = `
+                    <div class="w-11 h-11 rounded-xl ${spec.bgLight} ${spec.textClass} flex items-center justify-center text-lg flex-shrink-0 shadow-sm border border-slate-100">
+                        <i class="fa-solid ${spec.icon}"></i>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <span class="text-xs text-slate-400 font-semibold uppercase block truncate" title="${acc.name}">${acc.name}</span>
+                        <span class="text-[11px] text-slate-400 block font-mono truncate mt-0.5">${acc.accountNo || '-'}</span>
+                        <span class="text-base font-semibold text-slate-800 block mt-1 tracking-tight">฿${acc.balance.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openEditAccountsModal() {
+            tempAccountsEditList = JSON.parse(JSON.stringify(accounts));
+            renderEditAccountsForm();
+            document.getElementById('edit-accounts-modal').classList.remove('hidden');
+        }
+
+        function renderEditAccountsForm() {
+            const container = document.getElementById('edit-accounts-form-container');
+            container.innerHTML = '';
+
+            if (tempAccountsEditList.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-slate-400 font-medium">ไม่มีกระเป๋าเงินกรุณาเพิ่มธนาคารใหม่</div>`;
+                return;
+            }
+
+            tempAccountsEditList.forEach((acc, idx) => {
+                const div = document.createElement('div');
+                div.className = "p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 relative";
+                
+                let bankSelectOptions = '';
+                BANK_CATALOGUE.forEach(b => {
+                    const sel = acc.bankCode === b.code ? 'selected' : '';
+                    bankSelectOptions += `<option value="${b.code}" ${sel}>${b.name}</option>`;
+                });
+
+                div.innerHTML = `
+                    <div class="font-medium text-slate-700 border-b border-slate-200 pb-2 flex justify-between items-center text-xs">
+                        <span class="font-semibold text-indigo-900">กระเป๋าเงินใบที่ ${idx + 1}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] bg-slate-200 px-2 py-0.5 rounded-md uppercase font-bold text-slate-600">${acc.bankCode}</span>
+                            <button onclick="removeAccountFromTempList(${idx})" class="text-rose-500 hover:text-rose-700 text-sm p-1 transition-colors" title="ลบบัญชีนี้">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <div>
+                            <label class="block font-medium text-slate-400 mb-1 text-[11px]">สถาบันการเงิน</label>
+                            <select id="edit-acc-bank-${idx}" onchange="updateTempAccountValue(${idx}, 'bankCode', this.value)" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg bg-white font-medium text-[11px] focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+                                ${bankSelectOptions}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-400 mb-1 text-[11px]">ชื่อเรียกบัญชี</label>
+                            <input type="text" id="edit-acc-name-${idx}" value="${acc.name}" oninput="updateTempAccountValue(${idx}, 'name', this.value)" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg bg-white font-medium text-[11px] focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-400 mb-1 text-[11px]">เลขที่บัญชี</label>
+                            <input type="text" id="edit-acc-no-${idx}" value="${acc.accountNo || ''}" oninput="updateTempAccountValue(${idx}, 'accountNo', this.value)" placeholder="ระบุเลขบัญชี" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg bg-white font-medium text-[11px] focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-500 mb-1 text-[11px]">💎 ปรับยอดเงินคงเหลือปัจจุบัน (บาท)</label>
+                        <input type="number" step="0.01" id="edit-acc-bal-${idx}" value="${acc.balance}" oninput="updateTempAccountValue(${idx}, 'balance', parseFloat(this.value) || 0)" class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white font-semibold text-xs text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateTempAccountValue(idx, field, val) {
+            if (tempAccountsEditList[idx]) {
+                tempAccountsEditList[idx][field] = val;
+            }
+        }
+
+        function addNewBlankAccount() {
+            const newAcc = {
+                id: "acc_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+                bankCode: "KBANK",
+                name: "ธนาคารใหม่",
+                accountNo: "000-0-00000-0",
+                balance: 0.00
+            };
+            tempAccountsEditList.push(newAcc);
+            renderEditAccountsForm();
+            showNotification("เพิ่มกระเป๋าเงินใหม่แล้ว อย่าลืมกดบันทึกการเปลี่ยนแปลง");
+        }
+
+        function removeAccountFromTempList(idx) {
+            if (tempAccountsEditList.length <= 1) {
+                showNotification("ต้องมีกระเป๋าเงินเหลือในระบบอย่างน้อย 1 ใบ", false);
+                return;
+            }
+            tempAccountsEditList.splice(idx, 1);
+            renderEditAccountsForm();
+        }
+
+        function closeEditAccountsModal() {
+            document.getElementById('edit-accounts-modal').classList.add('hidden');
+        }
+
+        function saveAllAccountSettings() {
+            accounts = JSON.parse(JSON.stringify(tempAccountsEditList));
+            saveAppState();
+            closeEditAccountsModal();
+            showNotification("ปรับปรุงข้อมูลกระเป๋าเงินและยอดคงเหลือสำเร็จ!");
+            refreshAppUI();
+        }
+
+        function populateModalAccountOptions() {
+            const selectTx = document.getElementById('modal-tx-acc');
+            
+            if (selectTx) {
+                selectTx.innerHTML = '';
+                accounts.forEach(acc => {
+                    selectTx.innerHTML += `<option value="${acc.id}">${acc.name} (฿${acc.balance.toLocaleString('th-TH')})</option>`;
+                });
+            }
+        }
+
+        function refreshAppUI() {
+            const sumBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
+            document.getElementById('home-total-balance').innerText = `฿${sumBalance.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+
+            const incomeTotal = ledger.filter(i => i.type === 'income').reduce((sum, a) => sum + a.amount, 0);
+            const expenseTotal = ledger.filter(i => i.type === 'expense').reduce((sum, a) => sum + a.amount, 0);
+
+            document.getElementById('kpi-income').innerText = `฿${incomeTotal.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+            document.getElementById('kpi-expense').innerText = `฿${expenseTotal.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todayGovTotal = ledger
+                .filter(item => {
+                    const parsedDate = parseDateSafely(item.date);
+                    if (!parsedDate) return false;
+                    const itemDateStr = parsedDate.toISOString().split('T')[0];
+                    return itemDateStr === todayStr && item.desc.includes('[ไทยช่วยไทยพลัส]');
+                })
+                .reduce((sum, item) => sum + item.amount, 0);
+            
+            const todayGovEl = document.getElementById('kpi-today-gov');
+            if (todayGovEl) {
+                todayGovEl.innerText = `฿${todayGovTotal.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+            }
+
+            renderDashboardAccounts();
+            populateModalAccountOptions();
+            renderLowStockWarningBox();
+            renderRecentHistoryLogs();
+            renderMainLedgerTable();
+            renderMainStockTable();
+            updateHeaderCloudStatus();
+        }
+
+        function renderLowStockWarningBox() {
+            const container = document.getElementById('home-low-stock-box');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            const lowStockList = inventory.filter(p => p.stock <= p.minAlert);
+            if (lowStockList.length === 0) {
+                container.innerHTML = `
+                    <div class="flex items-center gap-2.5 p-3 bg-emerald-50 text-emerald-800 text-xs rounded-xl border border-emerald-100/70 w-full font-medium shadow-sm">
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                        <span>สินค้าในสต็อกร้านค้ายังมีพอใช้ขายทุกรายการ</span>
+                    </div>
+                `;
+            } else {
+                lowStockList.forEach(p => {
+                    const row = document.createElement('div');
+                    row.className = "flex items-center justify-between p-3 bg-amber-50 text-amber-950 text-xs rounded-xl border border-amber-200/60 font-medium gap-2 shadow-sm";
+                    row.innerHTML = `
+                        <div class="min-w-0">
+                            <span class="block truncate text-slate-700">📦 ${p.name}</span>
+                            <span class="text-[11px] text-amber-600 block mt-0.5">คงเหลือ: ${p.stock} ชิ้น (เกณฑ์เตือน: ${p.minAlert})</span>
+                        </div>
+                        <button onclick="switchTab('stock')" class="text-xs bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-lg flex-shrink-0 min-h-[32px] transition-colors border border-amber-500 shadow-sm">เติมของ</button>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+        }
+
+        function renderRecentHistoryLogs() {
+            const container = document.getElementById('home-recent-logs');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const lastThree = [...ledger].reverse().slice(0, 3);
+            if (lastThree.length === 0) {
+                container.innerHTML = `<span class="text-xs text-slate-400 font-medium p-4 text-center block w-full bg-slate-50 border border-slate-100 rounded-xl">ยังไม่มีบันทึกรายการบัญชีในขณะนี้</span>`;
+            } else {
+                lastThree.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = "flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl border border-slate-100 text-xs gap-3 shadow-sm bg-white";
+                    const isInc = item.type === 'income';
+                    const matchedAcc = accounts.find(a => a.id === item.accountId)?.name || 'บัญชีร้าน';
+                    
+                    row.innerHTML = `
+                        <div class="min-w-0 flex-1">
+                            <span class="font-medium text-slate-800 block truncate">${item.desc}</span>
+                            <span class="text-[11px] text-slate-400 block truncate mt-0.5">${matchedAcc} • ${formatThaiDateWithTime(item.date)}</span>
+                        </div>
+                        <span class="font-semibold text-sm text-right flex-shrink-0 ${isInc ? 'text-emerald-600' : 'text-slate-700'}">
+                            ${isInc ? '+' : '-'}฿${item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </span>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+        }
+
+        function renderMainLedgerTable() {
+            const tbody = document.getElementById('table-ledger-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const reversed = [...ledger].reverse();
+            reversed.forEach(item => {
+                const isInc = item.type === 'income';
+                const matchedAcc = accounts.find(a => a.id === item.accountId)?.name || 'บัญชีร้าน';
+                
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/70 ledger-row-node transition-colors";
+                tr.setAttribute('data-desc', item.desc);
+                tr.setAttribute('data-type', item.type);
+
+                tr.innerHTML = `
+                    <td class="p-4 text-slate-400 font-medium">${formatThaiDateWithTime(item.date)}</td>
+                    <td class="p-4 font-medium text-slate-800 min-w-[150px]">${item.desc}</td>
+                    <td class="p-4 text-center">
+                        <span class="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-100 border border-slate-200 text-slate-600 block truncate max-w-[125px] mx-auto text-center">
+                            ${matchedAcc}
+                        </span>
+                    </td>
+                    <td class="p-4 text-right font-semibold text-sm ${isInc ? 'text-emerald-600' : 'text-slate-800'}">
+                        ${isInc ? '+' : '-'}฿${item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </td>
+                    <td class="p-4 text-center">
+                        <button onclick="deleteLedgerTransaction(${item.id})" class="text-rose-500 hover:text-rose-700 p-1.5 transition-colors">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function runLedgerFilter() {
+            const query = document.getElementById('ledger-search-input').value.toLowerCase();
+            const filterType = document.getElementById('ledger-filter-select').value;
+            const rows = document.querySelectorAll('.ledger-row-node');
+
+            rows.forEach(row => {
+                const desc = row.getAttribute('data-desc').toLowerCase();
+                const type = row.getAttribute('data-type');
+
+                const queryMatch = desc.includes(query);
+                let filterMatch = true;
+                if (filterType !== 'all') filterMatch = type === filterType;
+
+                if (queryMatch && filterMatch) {
+                    row.classList.remove('hidden');
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+        }
+
+        function deleteLedgerTransaction(id) {
+            const targetTx = ledger.find(x => x.id === id);
+            if (targetTx) {
+                const matchedAcc = accounts.find(a => a.id === targetTx.accountId);
+                if (matchedAcc) {
+                    if (targetTx.type === 'income') {
+                        matchedAcc.balance -= targetTx.amount;
+                    } else if (targetTx.type === 'expense') {
+                        matchedAcc.balance += targetTx.amount;
+                    }
+                }
+            }
+
+            ledger = ledger.filter(x => x.id !== id);
+            saveAppState();
+            showNotification("ลบประวัติรายการและปรับสมดุลเงินคืนบัญชีแล้ว", false);
+            refreshAppUI();
+        }
+
+        function renderMainStockTable() {
+            const tbody = document.getElementById('table-stock-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            let totalVal = 0;
+
+            inventory.forEach((p, idx) => {
+                totalVal += p.cost * p.stock;
+                const isLow = p.stock <= p.minAlert;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/70 transition-colors text-xs";
+                tr.innerHTML = `
+                    <td class="py-3.5 pr-2 min-w-[140px]">
+                        <span class="font-medium text-slate-800 block">${p.name}</span>
+                        ${isLow ? '<span class="px-2 py-0.5 rounded-md text-[10px] bg-amber-50 text-amber-600 border border-amber-200 font-medium inline-block mt-1">สต็อกต่ำกว่าเกณฑ์</span>' : ''}
+                    </td>
+                    <td class="py-3.5 text-right font-medium">
+                        <span class="text-slate-400 block text-[11px]">ทุน: ฿${p.cost.toFixed(2)}</span>
+                        <span class="text-slate-700 font-semibold block mt-0.5">ขาย: ฿${p.price.toFixed(2)}</span>
+                    </td>
+                    <td class="py-3.5 text-center">
+                        <div class="inline-flex items-center gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                            <button onclick="adjustInventoryAmount(${idx}, -1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 shadow-sm text-slate-600 font-semibold flex items-center justify-center hover:bg-slate-50 active:scale-95 transition-all text-xs">-</button>
+                            <span class="font-semibold text-slate-800 text-xs w-7 text-center">${p.stock}</span>
+                            <button onclick="adjustInventoryAmount(${idx}, 1)" class="w-7 h-7 rounded-lg bg-amber-500 text-white shadow-sm font-semibold flex items-center justify-center hover:bg-amber-600 active:scale-95 transition-all text-xs">+</button>
+                        </div>
+                    </td>
+                    <td class="py-3.5 text-center">
+                        <button onclick="deleteProductFromStock(${idx})" class="text-rose-500 hover:text-rose-700 p-1.5 transition-colors">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('total-stock-cost-label').innerText = `มูลค่ารวมคลัง: ฿${totalVal.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+        }
+
+        function adjustInventoryAmount(idx, amt) {
+            if (inventory[idx]) {
+                const newStock = inventory[idx].stock + amt;
+                if (newStock < 0) {
+                    showNotification("สินค้าคงคลังติดลบไม่ได้", false);
+                    return;
+                }
+                inventory[idx].stock = newStock;
+                saveAppState();
+                showNotification(`ปรับปรุงยอดของ "${inventory[idx].name}" แล้ว`);
+                refreshAppUI();
+            }
+        }
+
+        function deleteProductFromStock(idx) {
+            inventory.splice(idx, 1);
+            saveAppState();
+            showNotification("ลบสินค้าออกจากคลังระบบแล้ว", false);
+            refreshAppUI();
+        }
+
+        function submitStockForm(e) {
+            e.preventDefault();
+            const name = document.getElementById('add-p-name').value.trim();
+            const cost = parseFloat(document.getElementById('add-p-cost').value);
+            const price = parseFloat(document.getElementById('add-p-price').value);
+            const stock = parseInt(document.getElementById('add-p-stock').value, 10);
+            const min = parseInt(document.getElementById('add-p-min').value, 10);
+
+            inventory.push({ name, cost, price, stock, minAlert: min });
+            saveAppState();
+            showNotification(`บันทึกเพิ่ม "${name}" เข้าคลังสำเร็จแล้ว`);
+            
+            document.getElementById('stock-add-form').reset();
+            refreshAppUI();
+        }
+
+        function openTransactionModal(type = 'income') {
+            const modal = document.getElementById('quick-tx-modal');
+            const title = document.getElementById('modal-title');
+            const typeInput = document.getElementById('modal-tx-type');
+            const btn = document.getElementById('modal-submit-btn');
+            const titleBar = document.getElementById('modal-title-bar');
+
+            modal.classList.remove('hidden');
+            typeInput.value = type;
+
+            if (type === 'income') {
+                title.innerText = "➕ ลงบันทึกรายการรายรับ";
+                titleBar.className = "p-4 border-b border-emerald-100 flex items-center justify-between bg-emerald-50 text-emerald-800 rounded-t-2xl font-semibold";
+                btn.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-xl transition-all shadow-md text-xs border border-emerald-600";
+                btn.innerText = "บันทึกนำเงินเข้าบัญชี";
+            } else {
+                title.innerText = "➖ ลงบันทึกรายการรายจ่าย";
+                titleBar.className = "p-4 border-b border-rose-100 flex items-center justify-between bg-rose-50 text-rose-800 rounded-t-2xl font-semibold";
+                btn.className = "w-full bg-rose-600 hover:bg-rose-700 text-white font-medium py-3 rounded-xl transition-all shadow-md text-xs border border-rose-600";
+                btn.innerText = "บันทึกหักเงินออกจากบัญชี";
+            }
+        }
+
+        function closeTransactionModal() {
+            document.getElementById('quick-tx-modal').classList.add('hidden');
+            document.getElementById('modal-tx-form').reset();
+        }
+
+        function submitModalTransaction(e) {
+            e.preventDefault();
+            const desc = document.getElementById('modal-tx-desc').value.trim();
+            const amount = parseFloat(document.getElementById('modal-tx-amount').value);
+            const accountId = document.getElementById('modal-tx-acc').value;
+            const type = document.getElementById('modal-tx-type').value;
+            const dateStr = new Date().toISOString();
+
+            const targetAcc = accounts.find(a => a.id === accountId);
+            if (targetAcc) {
+                if (type === 'income') {
+                    targetAcc.balance += amount;
+                } else {
+                    if (targetAcc.balance < amount) {
+                        showNotification(`คำเตือน: บัญชี ${targetAcc.name} มียอดเงินน้อยกว่ารายจ่ายยอดนี้`, false);
+                    }
+                    targetAcc.balance -= amount;
+                }
+            }
+
+            ledger.push({ id: Date.now(), date: dateStr, desc, type, amount, accountId });
+            saveAppState();
+            showNotification(`ลงบัญชี "${desc}" รวม ฿${amount.toLocaleString()} เรียบร้อยแล้ว`);
+            closeTransactionModal();
+            refreshAppUI();
+        }
+
+        function runGovCalculator() {
+            const total = parseFloat(document.getElementById('gov-sales-total').value) || 0;
+            const citizen = total * 0.40;
+            const state = total * 0.60;
+
+            document.getElementById('gov-calc-citizen').innerText = `฿${citizen.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+            document.getElementById('gov-calc-state').innerText = `฿${state.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+        }
+
+        function saveGov6040Transaction() {
+            const total = parseFloat(document.getElementById('gov-sales-total').value) || 0;
+            if (total <= 0) {
+                showNotification("กรุณาระบุยอดรวมสิทธิ์ที่ต้องการคิดคำนวณให้ถูกต้อง", false);
+                return;
+            }
+
+            const citizen = total * 0.40;
+            const state = total * 0.60;
+            const dateStr = new Date().toISOString();
+            let ktbAcc = accounts.find(a => a.bankCode === 'KTB') || accounts[0];
+
+            ktbAcc.balance += citizen;
+            ledger.push({
+                id: Date.now(),
+                date: dateStr,
+                desc: `[ไทยช่วยไทยพลัส] ยอดสแกนสำเร็จจากหน้าร้าน (40%)`,
+                type: 'income',
+                amount: citizen,
+                accountId: ktbAcc.id
+            });
+
+            ktbAcc.balance += state;
+            ledger.push({
+                id: Date.now() + 1,
+                date: dateStr,
+                desc: `[ไทยช่วยไทยพลัส] ส่วนสมทบจากรัฐยอดค้างเบิก (60%)`,
+                type: 'income',
+                amount: state,
+                accountId: ktbAcc.id
+            });
+
+            saveAppState();
+            showNotification("บันทึกแยกยอดสิทธิ์ไทยช่วยไทยเรียบร้อย เงินส่วน 40% นำเข้าบัญชีหลักร้าน");
+            closeGovModal();
+            refreshAppUI();
+        }
+
+        window.onload = function() {
+            setInterval(() => {
+                const now = new Date();
+                const thaiYear = now.getFullYear() + 543;
+                const clockStr = `${now.getDate()} ก.ค. ${thaiYear} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} น.`;
+                const clockEl = document.getElementById('header-clock');
+                if (clockEl) clockEl.innerText = clockStr;
+            }, 1000);
+
+            if (cloudGasUrl) {
+                pullDataFromCloud();
+            } else {
+                refreshAppUI();
+            }
+        }
+    </script>
+</body>
+</html>
